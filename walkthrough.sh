@@ -1,26 +1,31 @@
-AZURE_RESOURCE_GROUP=frankenetes
 
-# As of 2.0.25, you have to use 'export' for it to automagically set your storage acct
-# https://github.com/Azure/azure-cli/issues/5358
+
+export AZURE_RESOURCE_GROUP=frankenetes
+export ACI_REGION=eastus
 export AZURE_STORAGE_ACCOUNT=frankenetes
 
-az group create -n $AZURE_RESOURCE_GROUP -l eastus
+az group create -n $AZURE_RESOURCE_GROUP -l $ACI_REGION
 az storage account create -n $AZURE_STORAGE_ACCOUNT -g $AZURE_RESOURCE_GROUP
 
 AZURE_STORAGE_KEY=$(az storage account keys list -n $AZURE_STORAGE_ACCOUNT -g $AZURE_RESOURCE_GROUP --query '[0].value' -o tsv)
 
-#ETCD
+# Create the file shares
 az storage share create -n etcd
-
-#API Server
 az storage share create -n apiserver
-
-# Auth
 az storage share create -n auth
 
+#Set up Service Principle to access ACI
+az ad sp create-for-rbac --name virtual-kubernetes -o table
+
+# TODO: Create credentials file for aci and upload to the blob (credentials.json)
+export AZURE_TENANT_ID=<Tenant>
+export AZURE_CLIENT_ID=<AppId>
+export AZURE_CLIENT_SECRET=<Password>
 
 
-#TODO: generate the self sign certs and upload config to blob storage
+#TODO: generate the self sign certs and upload config to blob storage (cert.pem, key.pem)
+
+#TODO: Upload the localhost kubeconfig so VK knows how to talk with the API server (kubeconfig)
 
 
 #TODO: Deploy the container group
