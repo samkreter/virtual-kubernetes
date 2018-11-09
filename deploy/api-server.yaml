@@ -1,0 +1,55 @@
+apiVersion: '2018-10-01'
+location: eastus
+name: apiserver
+properties:
+  containers:
+  - name: apiserver
+    properties:
+      command:
+      - /apiserver
+      - --advertise-address=0.0.0.0
+      - --allow-privileged=true
+      - --apiserver-count=1
+      - --audit-log-maxage=30
+      - --audit-log-maxbackup=3
+      - --audit-log-maxsize=100
+      - --audit-log-path=/apiserverdata/log/audit.log
+      - --authorization-mode=Node,RBAC
+      - --bind-address=0.0.0.0
+      - --etcd-servers=http://$ETC_IP:2379
+      - --runtime-config=api/all
+      - --v=2
+      - --runtime-config=admissionregistration.k8s.io/v1alpha1
+      - --enable-swagger-ui=true
+      - --event-ttl=1h
+      - --service-node-port-range=30000-32767
+      - --insecure-bind-address=0.0.0.0
+      - --insecure-port
+      - '6445'
+      environmentVariables: []
+      image: gcr.io/google-containers/hyperkube-amd64:v1.9.2
+      ports:
+      - port: 6445
+        protocol: TCP
+      resources:
+        requests:
+          cpu: 1.0
+          memoryInGB: 1.5
+      volumeMounts:
+      - mountPath: /apiserverdata
+        name: azurefile
+  ipAddress:
+    ports:
+    - port: 6445
+      protocol: TCP
+    type: Public
+  osType: Linux
+  restartPolicy: Always
+  volumes:
+  - azureFile:
+      shareName: apiserver
+      storageAccountName: frank8s
+      storageAccountKey: <secret>
+    name: azurefile
+tags: {}
+type: Microsoft.ContainerInstance/containerGroups

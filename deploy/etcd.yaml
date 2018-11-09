@@ -1,0 +1,46 @@
+ersion: '2018-10-01'
+location: eastus
+name: etcd
+properties:
+  containers:
+  - name: etcd
+    properties:
+      command:
+      - /usr/local/bin/etcd
+      - --name=aci
+      - --data-dir=/etcd/data
+      - --wal-dir=/etcd-wal
+      - --listen-client-urls=http://0.0.0.0:2379
+      - --advertise-client-urls=http://192.168.12.50:2379,http://192.168.12.50:4001
+      environmentVariables: []
+      image: quay.io/coreos/etcd:v3.2.8
+      ports:
+      - port: 2379
+        protocol: TCP
+      - port: 2389
+        protocol: TCP
+      resources:
+        requests:
+          cpu: 1.0
+          memoryInGB: 1.5
+      volumeMounts:
+      - mountPath: /etcd
+        name: azurefile
+  ipAddress:
+    ip: 40.112.49.44
+    ports:
+    - port: 2379
+      protocol: TCP
+    - port: 2389
+      protocol: TCP
+    type: Public
+  osType: Linux
+  restartPolicy: Always
+  volumes:
+  - azureFile:
+      shareName: etcd
+      storageAccountName: frank8s
+      storageAccountKey: <secret>
+    name: azurefile
+tags: {}
+type: Microsoft.ContainerInstance/containerGroups

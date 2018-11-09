@@ -1,0 +1,176 @@
+ersion: '2018-10-01'
+location: eastus
+name: virtual-k8s2
+properties:
+  containers:
+  - name: etcd
+    properties:
+      command:
+      - /usr/local/bin/etcd
+      - --name=aci
+      - --data-dir=/etcd/data
+      - --wal-dir=/etcd-wal
+      - --listen-client-urls=http://0.0.0.0:2379
+      - --advertise-client-urls=http://0.0.0.0:2379,http://0.0.0.0:4001
+      environmentVariables: []
+      image: quay.io/coreos/etcd:v3.2.8
+      ports:
+      - port: 2379
+        protocol: TCP
+      - port: 2389
+        protocol: TCP
+      resources:
+        requests:
+          cpu: 1.0
+          memoryInGB: 2.5
+      volumeMounts:
+      - mountPath: /etcd
+        name: azurefile-etcd
+  - name: apiserver
+    properties:
+      command:
+      - /apiserver
+      - --advertise-address=0.0.0.0
+      - --allow-privileged=true
+      - --apiserver-count=1
+      - --audit-log-maxage=30
+      - --audit-log-maxbackup=3
+      - --audit-log-maxsize=100
+      - --audit-log-path=/apiserverdata/log/audit.log
+      - --authorization-mode=Node,RBAC
+      - --bind-address=0.0.0.0
+      - --etcd-servers=http://localhost:2379
+      - --runtime-config=api/all
+      - --v=2
+      - --runtime-config=admissionregistration.k8s.io/v1alpha1
+      - --enable-swagger-ui=true
+      - --event-ttl=1h
+      - --service-node-port-range=30000-32767
+      - --insecure-bind-address=0.0.0.0
+      - --insecure-port
+      - '6445'
+      - --kubelet-preferred-address-types=InternalIP
+      environmentVariables: []
+      image: gcr.io/google-containers/hyperkube-amd64:v1.9.2
+      ports:
+      - port: 6445
+        protocol: TCP
+      resources:
+        requests:
+          cpu: 1.0
+          memoryInGB: 2.5
+      volumeMounts:
+      - mountPath: /apiserverdata /etc/virtual-kubelet/auth
+        name: azurefile-apiserver
+  - name: scheduler
+    properties:
+      command:
+      - /scheduler
+      - --leader-elect=true
+      - --master=http://localhost:6445
+      - --v=2
+      environmentVariables: []
+      image: gcr.io/google-containers/hyperkube-amd64:v1.9.2
+      ports: []
+      resources:
+        requests:
+          cpu: .5
+          memoryInGB: 2.5
+  - name: controller-manager
+    properties:
+      command:
+      - /controller-manager
+      - --address=0.0.0.0
+      - --cluster-cidr=10.200.0.0/16
+      - --cluster-name=kubernetes
+      - --leader-elect=true
+      - --master=http://localhost:6445
+      - --service-cluster-ip-range=10.32.0.0/24
+      - --v=2
+      environmentVariables: []
+      image: gcr.io/google-containers/hyperkube-amd64:v1.9.2
+      ports: []
+      resources:
+        requests:
+          cpu: .5
+          memoryInGB: 2.5
+  - name: vk
+    properties:
+      command:
+      - virtual-kubelet
+      - --provider
+      - azure
+      - --namespace
+      - ""
+      - --nodename
+      - virtual-kubelet
+      - --os
+      - Linux
+      - --kubeconfig
+      - /etc/virtual-kubelet/auth/kubeconfig
+      - --log-level
+      - trace
+      environmentVariables:
+      - name: APISERVER_CERT_LOCATION
+        value: /etc/virtual-kubelet/auth/cert.pem
+      - name: APISERVER_KEY_LOCATION
+        value: /etc/virtual-kubelet/auth/key.pem
+      - name: KUBELET_PORT
+        value: "10250"
+      - name: VKUBELET_POD_IP
+        value: localhost
+      - name: VKUBELET_TAINT_KEY
+        value: virtual-kubelet.io/provider
+      - name: VKUBELET_TAINT_VALUE
+        value: azure
+      - name: VKUBELET_TAINT_EFFECT
+        value: NoSchedule
+      - name: ACS_CREDENTIAL_LOCATION
+        value: /etc/virtual-kubelet/auth/credentials.json
+      - name: ACI_RESOURCE_GROUP
+        value: sakreter-frank8s
+      - name: ACI_REGION
+        value: eastus
+      - name: ACI_EXTRA_USER_AGENT
+        value: sakreter-test/0.0.1
+      - name: MASTER_URI
+        value: http://localhost:6445
+      image: microsoft/virtual-kubelet:latest
+      resources:
+          requests:
+            cpu: 1.0
+            memoryInGB: 2.5
+      volumeMounts:
+      - mountPath: /etc/virtual-kubelet/auth
+        name: azurefile-auth
+  ipAddress:
+    ports:
+    - port: 2379
+      protocol: TCP
+    - port: 2389
+      protocol: TCP
+    - port: 6445
+      protocol: TCP
+    type: Public
+  osType: Linux
+  restartPolicy: Always
+  volumes:
+  - azureFile:
+      shareName: etcd
+      storageAccountName: frank8s
+      storageAccountKey: <secret>
+    name: azurefile-etcd
+  - azureFile:
+      shareName: apiserver
+      storageAccountName: frank8s
+      storageAccountKey: <secret>
+    name: azurefile-apiserver
+  - azureFile:
+      shareName: auth
+      storageAccountName: frank8s
+      storageAccountKey: <secret>
+    name: azurefile-auth
+tags: {}
+type: Microsoft.ContainerInstance/containerGroups
+
+

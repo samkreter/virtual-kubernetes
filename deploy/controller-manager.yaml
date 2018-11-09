@@ -1,0 +1,27 @@
+apiVersion: '2018-10-01'
+location: eastus
+name: controllermanager
+properties:
+  containers:
+  - name: controllermanager
+    properties:
+      command:
+      - /controller-manager
+      - --address=0.0.0.0
+      - --cluster-cidr=10.200.0.0/16
+      - --cluster-name=kubernetes
+      - --leader-elect=true
+      - --master=http://$API_SERVER_IP:6445
+      - --service-cluster-ip-range=10.32.0.0/24
+      - --v=2
+      environmentVariables: []
+      image: gcr.io/google-containers/hyperkube-amd64:v1.9.2
+      ports: []
+      resources:
+        requests:
+          cpu: 1.0
+          memoryInGB: 1.5
+  osType: Linux
+  restartPolicy: Always
+tags: {}
+type: Microsoft.ContainerInstance/containerGroups
