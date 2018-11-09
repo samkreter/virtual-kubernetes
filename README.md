@@ -62,8 +62,20 @@ export AZURE_STORAGE_ACCOUNT=<mystroageaccount> #This must be all lower case or 
 
 1. TODO: Upload template to fileshare
 
-### Deploy!!
+### Deploy!
 
 Now we can simple use the ACI yaml file to deploy it
 
     az container create -g $AZURE_RESOURCE_GROUP -n virtual-k8s -f ./deploy/all-deploy.yaml
+
+### Set up cluster/context info in a standalone file
+
+kubectl config set-cluster virtualk8s --server=http://$API_SERVER_IP:6445 --kubeconfig=virtualk8s.kubeconfig
+kubectl config set-context default --cluster=virtualk8s --kubeconfig=virtualk8s.kubeconfig
+kubectl config use-context default --kubeconfig=virtualk8s.kubeconfig
+
+### Use the kubeconfig
+
+export KUBECONFIG=virtualk8s.kubeconfig
+kubectl version
+kubectl api-versions

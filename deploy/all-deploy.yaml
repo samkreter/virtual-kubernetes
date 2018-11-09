@@ -1,6 +1,6 @@
 ersion: '2018-10-01'
 location: eastus
-name: virtual-k8s2
+name: virtual-k8s
 properties:
   containers:
   - name: etcd
