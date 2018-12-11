@@ -157,18 +157,18 @@ properties:
   volumes:
   - azureFile:
       shareName: etcd
-      storageAccountName: frank8s
-      storageAccountKey: <secret>
+      storageAccountName: <storageAccount>
+      storageAccountKey: <key>
     name: azurefile-etcd
   - azureFile:
       shareName: apiserver
-      storageAccountName: frank8s
-      storageAccountKey: <secret>
+      storageAccountName: <storageAccount>
+      storageAccountKey: <key>
     name: azurefile-apiserver
   - azureFile:
       shareName: auth
-      storageAccountName: frank8s
-      storageAccountKey: <secret>
+      storageAccountName: <storageAccount>
+      storageAccountKey: <key>
     name: azurefile-auth
 tags: {}
 type: Microsoft.ContainerInstance/containerGroups

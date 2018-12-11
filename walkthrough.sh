@@ -17,15 +17,45 @@ az storage share create -n auth
 #Set up Service Principle to access ACI
 az ad sp create-for-rbac --name virtual-kubernetes -o table
 
-# TODO: Create credentials file for aci and upload to the blob (credentials.json)
-export AZURE_TENANT_ID=<Tenant>
-export AZURE_CLIENT_ID=<AppId>
-export AZURE_CLIENT_SECRET=<Password>
+#Auth
+#       cert.pem
+#       key.pem
+#       credentials.json
+#       kubeconfig
 
 
-#TODO: generate the self sign certs and upload config to blob storage (cert.pem, key.pem)
+# Generate the self sign certs and upload config to file share (cert.pem, key.pem)
+openssl req -newkey rsa:2048 -nodes -keyout key.pem -x509 -days 365 -out cert.pem
 
-#TODO: Upload the localhost kubeconfig so VK knows how to talk with the API server (kubeconfig)
+az storage file upload \
+    --account-name $AZURE_STORAGE_ACCOUNT \
+    --account-key $AZURE_STORAGE_KEY \
+    --share-name "auth" \
+    --source "./cert.pem" \
+    --path "cert.pem"
+
+az storage file upload \
+    --account-name $AZURE_STORAGE_ACCOUNT \
+    --account-key $AZURE_STORAGE_KEY \
+    --share-name "auth" \
+    --source "./key.pem" \
+    --path "key.pem"
+
+# Upload the service principle credentials so that virtual kublet can create aci instances
+az storage file upload \
+    --account-name $AZURE_STORAGE_ACCOUNT \
+    --account-key $AZURE_STORAGE_KEY \
+    --share-name "auth" \
+    --source "./credentials.json" \
+    --path "credentials.json"
+
+# Upload the localhost kubeconfig so VK knows how to talk with the API server (kubeconfig)
+az storage file upload \
+    --account-name $AZURE_STORAGE_ACCOUNT \
+    --account-key $AZURE_STORAGE_KEY \
+    --share-name "auth" \
+    --source "./kubeconfig" \
+    --path "kubeconfig"
 
 
 #TODO: Deploy the container group
